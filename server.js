@@ -120,7 +120,6 @@ var evaluate_pics = function (fb, word, edge) {
 
           // Remove false
           .then(function (pics) {
-            console.log('done getting pics');
             return pics.filter(function (v) { return !(v == false); })
           })
 
@@ -194,7 +193,9 @@ var comments_contain_map = function (fb, syns) {
   return function (pic) {
     return get_all_comments(fb, pic.id)
       .then(function (all_words) {
-        // Check if all_words contains each syn
+        if (pic.name) all_words += ' ' + pic.name;
+
+        // Check if all_words contains any syn
         var has = syns.some(function (syn) {
           return (all_words.indexOf(syn) >= 0);
         });
