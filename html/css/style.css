@@ -27,6 +27,7 @@ div#form-container {
 div#image-container {
   padding: 20px;
   height: 400px;
+  overflow: auto;
 }
 
 div#search-form {

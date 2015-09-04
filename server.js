@@ -4,7 +4,6 @@
 var Facebook = require('facebook-node-sdk'),
     express  = require('express'),
     session  = require('express-session'),
-    synonyms = require('find-synonyms'),
     Promise  = require('es6-promise').Promise,
     request  = require('request'),
     qs       = require('querystring');
@@ -106,30 +105,33 @@ var evaluate_pics = function (fb, word, edge) {
         return;
       }
 
-      synonyms(word, 0, function (syns) {
-        // Want original word as well
-        syns.push(word);
+      var syns;
 
-        // Evaluate the pics
-        get_all_pics(fb, '/me/photos')
+      // Get synonyms
+      synonyms(word)
+        .then(function (s) {
+          syns = s.filter(function (w) { return (w.length > 3); });
 
-          // Continue only when all pics are filtered
-          .then(function (pics) {
-            return Promise.all(pics.map(comments_contain_map(fb, syns), []))
-          })
+          // Get all FB pics
+          return get_all_pics(fb, '/me/photos');
+        })
 
-          // Remove false
-          .then(function (pics) {
-            return pics.filter(function (v) { return !(v == false); })
-          })
+        // Continue only when all pics are filtered
+        .then(function (pics) {
+          return Promise.all(pics.map(comments_contain_map(fb, syns), []))
+        })
 
-          // Convert image IDs to actual image link
-          .then(function (ids) {
-            return Promise.all(ids.map(id_to_image_map(fb)));
-          })
+        // Remove false
+        .then(function (pics) {
+          return pics.filter(function (v) { return !(v == false); })
+        })
 
-          .then(resolve);
-      });
+        // Convert image IDs to actual image link
+        .then(function (ids) {
+          return Promise.all(ids.map(id_to_image_map(fb)));
+        })
+
+        .then(resolve);
     });
   });
 }
@@ -234,6 +236,35 @@ var get_all_comments = function (fb, pic_id) {
       } else {
         resolve(words);
       }
+    });
+  });
+}
+
+/* Synonyms */
+
+/**
+ * Fetches synonyms from the Wordnik API
+ */
+var synonyms = function (word) {
+  return new Promise(function (resolve, reject) {
+    var options = {
+      url: 'http://api.wordnik.com:80/v4/word.json/' + word + '/relatedWords',
+      qs: {
+        useCanonical: false,
+        limitPerRelationshipType: 50,
+        api_key: config.wordnik
+      }
+    }
+
+    request(options, function (err, resp, body) {
+      body = JSON.parse(body);
+
+      resolve(body.reduce(function (acc, curr) {
+        return (curr.relationshipType === 'equivalent' ||
+          curr.relationshipType === 'synonym') ?
+          acc.concat(curr.words) :
+          acc;
+      }, []));
     });
   });
 }
