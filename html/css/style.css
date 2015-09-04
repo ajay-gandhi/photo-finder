@@ -9,7 +9,7 @@ div#wrapper {
 
 div.container {
   width: 100%;
-  max-width: 400px;
+  max-width: 450px;
   margin: 20px auto 5px auto;
   border-radius: 20px;
   background-color: #eeeeee;
@@ -27,6 +27,9 @@ div#form-container {
 div#image-container {
   padding: 20px;
   height: 400px;
+}
+div#image-container div#photos {
+  height: 100%;
   overflow: auto;
 }
 
