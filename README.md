@@ -20,9 +20,9 @@ credentials and Wordnik API key:
 
 ```json
 {
-  "appID": [fb app id], 
-  "secret": [fb app secret],
-  "wordnik": [wordnik api key]
+  "appID": "[fb app id]", 
+  "secret": "[fb app secret]",
+  "wordnik": "[wordnik api key]"
 }
 ```
 
