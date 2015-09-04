@@ -111,13 +111,16 @@ var evaluate_pics = function (fb, word, edge) {
         syns.push(word);
 
         // Evaluate the pics
-        Promise
+        get_all_pics(fb, '/me/photos')
 
           // Continue only when all pics are filtered
-          .all(res.data.map(comments_contain_map(fb, syns), []))
+          .then(function (pics) {
+            return Promise.all(pics.map(comments_contain_map(fb, syns), []))
+          })
 
           // Remove false
           .then(function (pics) {
+            console.log('done getting pics');
             return pics.filter(function (v) { return !(v == false); })
           })
 
@@ -128,6 +131,29 @@ var evaluate_pics = function (fb, word, edge) {
 
           .then(resolve);
       });
+    });
+  });
+}
+
+/**
+ * Recursively retrieves all photos the user is tagged in
+ */
+var get_all_pics = function (fb, edge) {
+  return new Promise(function (resolve, reject) {
+    fb.api(edge, function (err, res) {
+      if (err) return console.trace('Error retrieving photos:', err);
+
+      // If paging, recurse
+      if (res.paging.next) {
+        get_all_pics(fb, res.paging.next)
+          .then(function (next_pics) {
+            resolve(res.data.concat(next_pics));
+          });
+
+      // Otherwise just return these words
+      } else {
+        resolve(res.data);
+      }
     });
   });
 }
